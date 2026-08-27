@@ -56,7 +56,7 @@ def test_no_embedded_pat_or_common_secret_pattern():
 
 
 def test_data_template_contains_only_metadata():
-    data_root = ROOT.parent/'project-journal-data'/'data'
+    data_root = ROOT/'fixtures'/'data-template'/'data'
     files = [p.relative_to(data_root).as_posix() for p in data_root.rglob('*') if p.is_file()]
     assert files == ['meta.json']
 
