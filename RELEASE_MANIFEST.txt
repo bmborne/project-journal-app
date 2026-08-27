@@ -1,0 +1,9 @@
+Project Journal v3 release manifest
+Date: 2026-08-27
+Architecture: GitHub Pages PWA + private GitHub JSON repository + IndexedDB cache
+Runtime SQLite: none
+Runtime npm dependencies: none
+Automated Node tests: 17 passed
+Pytest tests: 13 passed
+Static SOTA audit: 21/21 controls passed
+Live GitHub credential acceptance: required after deployment by repository owner

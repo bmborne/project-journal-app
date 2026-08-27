@@ -1,0 +1,64 @@
+name: Test and deploy Project Journal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: JavaScript CRUD and API tests
+        run: node --test tests/*.test.mjs
+      - name: Pytest story, security and deployment tests
+        run: pytest -q
+      - name: Static security and architecture audit
+        run: python audit/audit.py
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Stage static site
+        run: |
+          mkdir -p _site/src _site/icons
+          cp index.html manifest.webmanifest sw.js .nojekyll _site/
+          cp src/*.js src/styles.css _site/src/
+          cp icons/*.png _site/icons/
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

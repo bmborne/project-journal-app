@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'" />
+  <title>Project Journal</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#111827" />
+</head>
+<body>
+  <div id="fatal" class="fatal hidden"></div>
+
+  <section id="login-view" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand-row">
+        <div class="brand-mark">PJ</div>
+        <div class="eyebrow">Personal project intelligence</div>
+      </div>
+      <h1>Your project history, under your GitHub account.</h1>
+      <p class="lead">Track actions, issues, risks, decisions and project notes across multiple engagements. The application is hosted on GitHub Pages and the records live in a private repository that you own.</p>
+      <div class="privacy-callout">
+        <strong>Before using this for work:</strong> only store information your employer or client permits you to keep in a personal GitHub account. Do not store credentials, regulated personal data, client secrets or material you are not entitled to retain after an engagement.
+      </div>
+      <div class="field token-field"><label for="github-token">Fine-grained GitHub token</label><input id="github-token" type="password" autocomplete="off" placeholder="github_pat_..." /></div>
+      <p class="fine-print">For safety, the token is stored only for this browser session and is removed when you sign out or close the session.</p>
+      <button id="sign-in-btn" class="btn primary large">Connect private repository</button>
+      <button id="offline-btn" class="btn secondary large">Open cached data read-only</button>
+      <p class="fine-print">Create a fine-grained GitHub personal access token restricted to the private data repository with repository Contents read/write permission. The token is never committed to GitHub and is kept only for the current browser session.</p>
+      <div id="login-error" class="error-text"></div>
+    </div>
+  </section>
+
+  <div id="app-view" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small-mark">PJ</div>
+        <div><strong>Project Journal</strong><span>Personal workspace</span></div>
+      </div>
+      <nav class="nav-list" aria-label="Primary">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">01</span><span>Dashboard</span></button>
+        <button class="nav-item" data-view="journal"><span class="nav-icon">02</span><span>Journal</span></button>
+        <button class="nav-item" data-view="projects"><span class="nav-icon">03</span><span>Projects</span></button>
+        <button class="nav-item" data-view="data"><span class="nav-icon">04</span><span>Data & Sync</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <div id="sidebar-user" class="user-card"></div>
+        <button id="sign-out-btn" class="btn ghost full">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow" id="view-eyebrow">Portfolio overview</div>
+          <h1 id="view-title">Dashboard</h1>
+        </div>
+        <div class="topbar-controls">
+          <div class="project-scope">
+            <label for="project-scope">Project view</label>
+            <select id="project-scope"></select>
+          </div>
+          <div class="sync-chip" id="sync-chip"><span class="sync-dot"></span><span id="sync-status">Connecting</span></div>
+          <button id="sync-btn" class="btn secondary">Sync</button>
+        </div>
+      </header>
+
+      <div id="banner" class="banner hidden" role="status"></div>
+
+      <main class="content">
+        <section id="dashboard-view" class="view-section"></section>
+
+        <section id="journal-view" class="view-section hidden">
+          <div class="section-head">
+            <div><div class="eyebrow">Structured record</div><h2>Journal entries</h2></div>
+            <button id="new-entry-btn" class="btn primary">+ New entry</button>
+          </div>
+
+          <section id="entry-editor" class="panel editor-panel hidden">
+            <div class="panel-head">
+              <div><div class="eyebrow">Entry editor</div><h3 id="entry-form-title">New entry</h3></div>
+              <button id="close-entry-editor" class="icon-btn" aria-label="Close editor">x</button>
+            </div>
+            <div class="form-grid cols-3">
+              <div class="field"><label for="e-project">Project</label><select id="e-project"></select></div>
+              <div class="field"><label for="e-date">Date</label><input id="e-date" type="date" /></div>
+              <div class="field"><label for="e-type">Type</label><select id="e-type">
+                <option value="action">Action</option><option value="issue">Issue</option><option value="risk">Risk</option>
+                <option value="decision">Decision</option><option value="meeting">Meeting</option><option value="note">Note</option>
+              </select></div>
+            </div>
+            <div class="form-grid cols-2">
+              <div class="field"><label for="e-title">Title / summary</label><input id="e-title" type="text" maxlength="180" placeholder="Short, searchable summary" /></div>
+              <div class="field" id="status-field"><label for="e-status">Status</label><select id="e-status"><option value="open">Open</option><option value="closed">Closed</option></select></div>
+            </div>
+            <div class="field"><label for="e-body">Details</label><textarea id="e-body" rows="5" placeholder="What happened, what was agreed, context, dependencies and next steps..."></textarea></div>
+
+            <div id="action-fields" class="typed-fields hidden">
+              <div class="form-grid cols-3">
+                <div class="field"><label for="e-owner">Owner</label><input id="e-owner" type="text" list="people-list" /></div>
+                <div class="field"><label for="e-due">Due date</label><input id="e-due" type="date" /></div>
+                <div class="field"><label for="e-priority">Priority</label><select id="e-priority"><option value="">Not set</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+              </div>
+            </div>
+            <div id="issue-fields" class="typed-fields hidden">
+              <div class="form-grid cols-2">
+                <div class="field"><label for="e-issue-owner">Owner</label><input id="e-issue-owner" type="text" list="people-list" /></div>
+                <div class="field"><label for="e-severity">Severity</label><select id="e-severity"><option value="">Not set</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+              </div>
+              <div class="form-grid cols-2">
+                <div class="field"><label for="e-root-cause">Root cause</label><textarea id="e-root-cause" rows="2"></textarea></div>
+                <div class="field"><label for="e-resolution">Resolution</label><textarea id="e-resolution" rows="2"></textarea></div>
+              </div>
+            </div>
+            <div id="risk-fields" class="typed-fields hidden">
+              <div class="form-grid cols-4">
+                <div class="field"><label for="e-risk-owner">Owner</label><input id="e-risk-owner" type="text" list="people-list" /></div>
+                <div class="field"><label for="e-likelihood">Likelihood</label><select id="e-likelihood"><option value="">Not set</option><option value="rare">Rare</option><option value="unlikely">Unlikely</option><option value="possible">Possible</option><option value="likely">Likely</option><option value="almost-certain">Almost certain</option></select></div>
+                <div class="field"><label for="e-impact">Impact</label><select id="e-impact"><option value="">Not set</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+                <div class="field"><label for="e-review-date">Review date</label><input id="e-review-date" type="date" /></div>
+              </div>
+              <div class="field"><label for="e-mitigation">Mitigation</label><textarea id="e-mitigation" rows="2"></textarea></div>
+            </div>
+            <div id="decision-fields" class="typed-fields hidden">
+              <div class="field"><label for="e-decision">Decision / outcome</label><textarea id="e-decision" rows="2" placeholder="Record the final decision and why it was made"></textarea></div>
+            </div>
+
+            <div class="form-grid cols-2">
+              <div class="field"><label for="e-people">People involved</label><input id="e-people" type="text" placeholder="Alex Smith, Priya Jones" /><div class="hint">Comma separated; names are linked globally across projects.</div></div>
+              <div class="field"><label for="e-tags">Tags</label><input id="e-tags" type="text" placeholder="migration, dependency, finance" /><div class="hint">Comma separated; tags are reusable across projects.</div></div>
+            </div>
+            <datalist id="people-list"></datalist>
+            <div id="entry-form-error" class="error-text"></div>
+            <div class="form-actions">
+              <button id="save-entry-btn" class="btn primary">Save entry</button>
+              <button id="cancel-entry-btn" class="btn secondary">Cancel</button>
+            </div>
+          </section>
+
+          <section class="panel filter-panel">
+            <div class="form-grid filters">
+              <div class="field grow"><label for="filter-search">Search</label><input id="filter-search" type="search" placeholder="Search title, details, people, tags, owner..." /></div>
+              <div class="field"><label for="filter-type">Type</label><select id="filter-type"><option value="all">All types</option><option value="action">Actions</option><option value="issue">Issues</option><option value="risk">Risks</option><option value="decision">Decisions</option><option value="meeting">Meetings</option><option value="note">Notes</option></select></div>
+              <div class="field"><label for="filter-status">Status</label><select id="filter-status"><option value="all">All</option><option value="open">Open</option><option value="closed">Closed</option></select></div>
+              <div class="field"><label for="filter-from">From</label><input id="filter-from" type="date" /></div>
+              <div class="field"><label for="filter-to">To</label><input id="filter-to" type="date" /></div>
+            </div>
+          </section>
+          <div id="journal-results"></div>
+        </section>
+
+        <section id="projects-view" class="view-section hidden">
+          <div class="section-head">
+            <div><div class="eyebrow">Portfolio catalogue</div><h2>Projects</h2></div>
+            <button id="new-project-btn" class="btn primary">+ New project</button>
+          </div>
+          <div id="projects-grid" class="project-grid"></div>
+        </section>
+
+        <section id="data-view" class="view-section hidden"></section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="project-dialog">
+    <form id="project-form" class="dialog-card">
+      <div class="panel-head"><div><div class="eyebrow">Project details</div><h2 id="project-dialog-title">New project</h2></div><button id="close-project-dialog" type="button" class="icon-btn">x</button></div>
+      <div class="form-grid cols-2">
+        <div class="field"><label for="p-name">Project name</label><input id="p-name" type="text" maxlength="120" required /></div>
+        <div class="field"><label for="p-code">Code / reference</label><input id="p-code" type="text" maxlength="40" /></div>
+      </div>
+      <div class="form-grid cols-2">
+        <div class="field"><label for="p-organisation">Organisation / client</label><input id="p-organisation" type="text" maxlength="120" /></div>
+        <div class="field"><label for="p-status">Status</label><select id="p-status"><option value="active">Active</option><option value="on-hold">On hold</option><option value="completed">Completed</option><option value="archived">Archived</option></select></div>
+      </div>
+      <div class="form-grid cols-2">
+        <div class="field"><label for="p-start">Start date</label><input id="p-start" type="date" /></div>
+        <div class="field"><label for="p-end">End date</label><input id="p-end" type="date" /></div>
+      </div>
+      <div class="field"><label for="p-description">Description</label><textarea id="p-description" rows="3"></textarea></div>
+      <div class="field"><label for="p-objective">Objective / outcome</label><textarea id="p-objective" rows="3"></textarea></div>
+      <div id="project-form-error" class="error-text"></div>
+      <div class="form-actions right"><button id="cancel-project" type="button" class="btn secondary">Cancel</button><button class="btn primary" type="submit">Save project</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

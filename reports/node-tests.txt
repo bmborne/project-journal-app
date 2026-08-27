@@ -1,0 +1,112 @@
+TAP version 13
+# Subtest: putJson sends content write with branch and current SHA
+ok 1 - putJson sends content write with branch and current SHA
+  ---
+  duration_ms: 20.566682
+  type: 'test'
+  ...
+# Subtest: 409 is surfaced as ConflictError
+ok 2 - 409 is surfaced as ConflictError
+  ---
+  duration_ms: 0.608556
+  type: 'test'
+  ...
+# Subtest: 422 stays validation error rather than being mislabeled as concurrency conflict
+ok 3 - 422 stays validation error rather than being mislabeled as concurrency conflict
+  ---
+  duration_ms: 0.399819
+  type: 'test'
+  ...
+# Subtest: delete sends the exact SHA
+ok 4 - delete sends the exact SHA
+  ---
+  duration_ms: 0.232402
+  type: 'test'
+  ...
+# Subtest: connect initializes an empty repository and syncs meta
+ok 5 - connect initializes an empty repository and syncs meta
+  ---
+  duration_ms: 1.866319
+  type: 'test'
+  ...
+# Subtest: project CRUD works and preserves createdAt
+ok 6 - project CRUD works and preserves createdAt
+  ---
+  duration_ms: 2.333787
+  type: 'test'
+  ...
+# Subtest: all supported journal entry types can be created, read, updated and deleted
+ok 7 - all supported journal entry types can be created, read, updated and deleted
+  ---
+  duration_ms: 1.097867
+  type: 'test'
+  ...
+# Subtest: people and tags deduplicate case-insensitively
+ok 8 - people and tags deduplicate case-insensitively
+  ---
+  duration_ms: 6.90457
+  type: 'test'
+  ...
+# Subtest: referential integrity blocks deletion of referenced project/person/tag
+ok 9 - referential integrity blocks deletion of referenced project/person/tag
+  ---
+  duration_ms: 1.288869
+  type: 'test'
+  ...
+# Subtest: validation rejects orphan entries and malformed dates/types
+ok 10 - validation rejects orphan entries and malformed dates/types
+  ---
+  duration_ms: 0.485405
+  type: 'test'
+  ...
+# Subtest: conflict does not mutate local records or cache
+ok 11 - conflict does not mutate local records or cache
+  ---
+  duration_ms: 1.021134
+  type: 'test'
+  ...
+# Subtest: incremental sync reuses cached records with unchanged SHA
+ok 12 - incremental sync reuses cached records with unchanged SHA
+  ---
+  duration_ms: 0.51636
+  type: 'test'
+  ...
+# Subtest: sync rejects record/file identity mismatch
+ok 13 - sync rejects record/file identity mismatch
+  ---
+  duration_ms: 0.548848
+  type: 'test'
+  ...
+# Subtest: schema mismatch fails closed before replacing the local cache
+ok 14 - schema mismatch fails closed before replacing the local cache
+  ---
+  duration_ms: 1.19495
+  type: 'test'
+  ...
+# Subtest: normalizeList trims and deduplicates exact values
+ok 15 - normalizeList trims and deduplicates exact values
+  ---
+  duration_ms: 1.146668
+  type: 'test'
+  ...
+# Subtest: escapeHtml neutralizes HTML metacharacters
+ok 16 - escapeHtml neutralizes HTML metacharacters
+  ---
+  duration_ms: 0.136291
+  type: 'test'
+  ...
+# Subtest: risk scoring and bands are deterministic
+ok 17 - risk scoring and bands are deterministic
+  ---
+  duration_ms: 0.137823
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 91.27023

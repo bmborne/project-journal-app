@@ -1,0 +1,24 @@
+# Project Journal SOTA Audit
+PASS  Build-free static deployment
+PASS  No runtime SQLite
+PASS  Session-only PAT
+PASS  Fine-grained PAT prefix validation
+PASS  CSP blocks inline/eval scripts
+PASS  CSP limits inline allowance to style attributes
+PASS  CSP API allowlist
+PASS  PWA manifest
+PASS  Service worker same-origin cache only
+PASS  Optimistic concurrency SHA
+PASS  Conflict handling
+PASS  Referential deletion guard
+PASS  Entity validation
+PASS  Schema version fail-closed guard
+PASS  Offline read-only path
+PASS  JSON backup
+PASS  CSV backup
+PASS  Storyline catalog
+PASS  Node CRUD tests
+PASS  Pytest suite
+PASS  No committed GitHub token
+
+21/21 controls passed.

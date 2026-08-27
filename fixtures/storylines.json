@@ -1,0 +1,9 @@
+[
+  {"id":"S01","name":"New consultant creates first project and action","steps":["create project","create person","create tag","create action","read dashboard","close action"],"expected":"project and action remain linked"},
+  {"id":"S02","name":"Issue lifecycle","steps":["create issue","set severity","add root cause","update resolution","close issue"],"expected":"issue history is versioned in Git"},
+  {"id":"S03","name":"Risk governance","steps":["create risk","set likelihood and impact","set mitigation and review date","update risk","close risk"],"expected":"risk stays attached to project"},
+  {"id":"S04","name":"Cross-company portfolio separation","steps":["create Employer A project","create Employer B project","add records to both","scope dashboard to one project"],"expected":"records do not cross project boundaries"},
+  {"id":"S05","name":"Two-device stale update","steps":["device A reads SHA1","device B reads SHA1","device A updates to SHA2","device B submits SHA1"],"expected":"GitHub returns conflict and local state is not overwritten"},
+  {"id":"S06","name":"Offline read","steps":["sync online","close network","open cached data"],"expected":"IndexedDB retains last synchronized records; writes require reconnection"},
+  {"id":"S07","name":"Portable backup","steps":["export JSON","export CSV"],"expected":"exports contain all projects and entries without authentication token"}
+]

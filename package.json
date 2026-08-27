@@ -1,0 +1,11 @@
+{
+  "name": "project-journal-github",
+  "private": true,
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "audit": "python audit/audit.py",
+    "test:all": "node --test tests/*.test.mjs && pytest -q && python audit/audit.py"
+  }
+}
