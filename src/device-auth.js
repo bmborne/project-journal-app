@@ -15,7 +15,7 @@ async function brokerPost(path, body) {
   try {
     response = await fetch(broker(path), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body || {})
     });
   } catch {
@@ -41,7 +41,7 @@ export async function pollForToken(deviceCode, { interval = 5, expiresIn = 900, 
     try {
       response = await fetch(broker('/github/oauth/token'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           device_code: deviceCode,
           grant_type: deviceGrant

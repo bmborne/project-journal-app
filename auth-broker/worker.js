@@ -29,7 +29,17 @@ async function githubFormPost(url, form) {
 export default {
   async fetch(request, env) {
     const origin = allowOrigin(request, env);
-    if (request.method === 'OPTIONS') return json({}, 204, origin);
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': origin,
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400'
+        }
+      });
+    }
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405, origin);
     if (!env.GITHUB_CLIENT_ID) return json({ error: 'missing_client_id', message: 'GITHUB_CLIENT_ID is not configured.' }, 500, origin);
 
