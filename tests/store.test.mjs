@@ -43,6 +43,18 @@ test('connect initializes an empty repository and syncs meta', async () => {
   assert.equal(store.projects().length,0);
 });
 
+test('connect uses a GitHub App installation when the named repo is not visible at owner/login', async () => {
+  class AppGitHub extends FakeGitHub {
+    async getRepo(){ throw new GitHubError('Not Found', 404); }
+    async findInstalledRepo(name){ return { name, private:true, default_branch:'main', owner:{ login:'bmborne' } }; }
+  }
+  const github=new AppGitHub();
+  const store=new JournalStore({github, cache:new MemoryCache()});
+  await store.connect();
+  assert.equal(store.owner,'bmborne');
+  assert.ok(github.files.has('data/meta.json'));
+});
+
 test('project CRUD works and preserves createdAt', async () => {
   const {store}=await connectedStore();
   const id=crypto.randomUUID();

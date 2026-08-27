@@ -1,9 +1,10 @@
-const CACHE = 'project-journal-static-v3';
+const CACHE = 'project-journal-static-v4';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest',
   './src/styles.css', './src/main.js', './src/config.js', './src/auth.js',
   './src/cache.js', './src/github.js', './src/store.js', './src/export.js',
-  './src/utils.js', './src/validation.js', './icons/icon-192.png', './icons/icon-512.png'
+  './src/utils.js', './src/validation.js', './src/device-auth.js',
+  './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {

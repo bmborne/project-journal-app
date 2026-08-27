@@ -16,4 +16,4 @@ Recommended setup:
 
 The Worker does not store tokens. The browser stores the returned GitHub access token only in `sessionStorage`.
 
-If you use a custom Worker domain instead of `workers.dev`, add that HTTPS origin to the `connect-src` Content Security Policy in `index.html`.
+If you use a custom Worker domain instead of `workers.dev`, add that exact HTTPS origin to the `connect-src` Content Security Policy in `index.html`. Do not use `https://*.workers.dev`; that pattern does not match `name.account.workers.dev`.

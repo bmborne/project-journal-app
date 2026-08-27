@@ -513,22 +513,10 @@ async function openCachedOffline() {
   renderAll();
 }
 
-async function signInFlow() {
-  $('login-error').textContent = '';
-  try {
-    setAccessToken($('github-token').value);
-    await connectUsingSavedAuth();
-    $('github-token').value = '';
-  } catch (err) {
-    signOut();
-    $('login-error').textContent = err.message || 'GitHub connection failed.';
-  }
-}
-
 async function deviceSignInFlow() {
   $('login-error').textContent = '';
   if (!isDeviceAuthConfigured()) {
-    $('login-error').textContent = 'GitHub sign-in is not configured yet. Deploy the auth broker and set authBrokerUrl in src/config.js, or use the token fallback.';
+    $('login-error').textContent = 'GitHub sign-in is not configured yet.';
     return;
   }
   try {
@@ -591,7 +579,6 @@ async function toggleEntry(id) {
 
 function wireEvents() {
   $('github-device-btn').addEventListener('click', deviceSignInFlow);
-  $('sign-in-btn').addEventListener('click', signInFlow);
   $('offline-btn').addEventListener('click', openCachedOffline);
   $('sign-out-btn').addEventListener('click', doSignOut);
   $('sync-btn').addEventListener('click', syncNow);

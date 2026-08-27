@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
   <meta name="referrer" content="no-referrer" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com https://*.workers.dev; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com https://project-journal-auth.boniphacemkindi.workers.dev; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'" />
   <title>Project Journal</title>
   <link rel="stylesheet" href="./src/styles.css" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -18,30 +18,21 @@
     <div class="login-card">
       <div class="brand-row">
         <div class="brand-mark">PJ</div>
-        <div class="eyebrow">Personal project intelligence</div>
+        <div class="eyebrow">Project Journal</div>
       </div>
-      <h1>Your project history, under your GitHub account.</h1>
-      <p class="lead">Track actions, issues, risks, decisions and project notes across multiple engagements. The application is hosted on GitHub Pages and the records live in a private repository that you own.</p>
-      <div class="privacy-callout">
-        <strong>Before using this for work:</strong> only store information your employer or client permits you to keep in a personal GitHub account. Do not store credentials, regulated personal data, client secrets or material you are not entitled to retain after an engagement.
-      </div>
+      <h1>Sign in to your journal</h1>
+      <p class="lead">Your records stay in the private GitHub repository you own.</p>
       <button id="github-device-btn" class="btn primary large">Sign in with GitHub</button>
       <div id="device-auth-panel" class="device-auth-panel hidden">
         <div class="eyebrow">GitHub device code</div>
         <div id="device-code" class="device-code"></div>
         <a id="device-link" class="btn secondary large" href="https://github.com/login/device" target="_blank" rel="noopener">Open GitHub verification</a>
-        <p id="device-status" class="fine-print">Enter this code on GitHub, then return here while the app connects.</p>
+        <p id="device-status" class="fine-print">Enter this code on GitHub, then return here.</p>
       </div>
       <div id="device-auth-unavailable" class="oauth-unavailable hidden">
-        GitHub sign-in needs the auth broker URL in <code>src/config.js</code>. The token fallback still works.
+        GitHub sign-in is not configured yet.
       </div>
-      <details class="token-fallback">
-        <summary>Use fine-grained token instead</summary>
-        <div class="field token-field"><label for="github-token">Fine-grained GitHub token</label><input id="github-token" type="password" autocomplete="off" placeholder="github_pat_..." /></div>
-        <button id="sign-in-btn" class="btn secondary large">Connect with token</button>
-      </details>
-      <button id="offline-btn" class="btn secondary large">Open cached data read-only</button>
-      <p class="fine-print">GitHub sign-in and token fallback both keep the resulting access token only for this browser session. The recommended GitHub App is installed only on the private data repository with Contents read/write permission.</p>
+      <button id="offline-btn" class="btn text">Open cached data</button>
       <div id="login-error" class="error-text"></div>
     </div>
   </section>

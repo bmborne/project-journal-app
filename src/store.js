@@ -38,8 +38,13 @@ export class JournalStore {
     let repoInfo;
     try { repoInfo = await this.github.getRepo(this.owner, this.repo); }
     catch (err) {
-      if (err instanceof this.github.GitHubError && err.status === 404) throw new this.github.GitHubError(`Private repository "${this.repo}" was not found or this token does not have access to it.`, 404);
-      throw err;
+      if (!(err instanceof this.github.GitHubError && [403, 404].includes(err.status))) throw err;
+      const found = this.github.findInstalledRepo ? await this.github.findInstalledRepo(this.repo) : null;
+      if (!found) {
+        throw new this.github.GitHubError(`Sign-in succeeded, but the GitHub App cannot see "${this.repo}". Install the app on that private repository only, then sign in again.`, 404);
+      }
+      this.owner = found.owner?.login || this.owner;
+      repoInfo = found;
     }
     this.branch = repoInfo.default_branch || 'main';
     await this.sync();

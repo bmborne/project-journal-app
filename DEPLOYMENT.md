@@ -7,7 +7,7 @@ Use one personal GitHub account and two repositories:
 - `project-journal-app` — **Public**. Contains only the static application and tests. GitHub Pages serves this repository.
 - `project-journal-data` — **Private**. Contains the user's journal records. Never enable Pages on this repository.
 
-There is no OneDrive, SQLite server, cloud database, or npm runtime dependency. The app can still use a session-only fine-grained token directly. For GitHub sign-in without pasting a token, deploy the optional `auth-broker/` Worker and connect it to a GitHub App installed only on the private data repository.
+There is no OneDrive, SQLite server, cloud database, or npm runtime dependency. Sign-in uses a GitHub App plus the `auth-broker/` Worker. Install that GitHub App only on the private data repository.
 
 ## 2. Create the repositories
 
@@ -104,8 +104,8 @@ The Worker does not store tokens. The browser stores the returned access token o
 ## 8. First run
 
 1. Open the Pages URL.
-2. Select **Sign in with GitHub**, or paste the fine-grained token fallback.
-3. Complete GitHub verification or select **Connect with token**.
+2. Select **Sign in with GitHub**.
+3. Enter the device code on GitHub and approve access.
 4. Rename the generated first project or create the first real project.
 5. Add an Action, Issue and Risk and confirm the Dashboard updates.
 6. Open the private data repo and verify that GitHub created JSON records beneath `data/`.
@@ -119,7 +119,7 @@ The local IndexedDB cache can be opened read-only when GitHub is unavailable. Wr
 ## 10. Second-device test
 
 1. Open the Pages URL on a second device.
-2. Create a separate fine-grained token for that device, restricted to the same private data repository.
+2. Select **Sign in with GitHub** and approve access.
 3. Connect and verify the same projects appear.
 4. Update one record on device A, sync device B, and verify the update appears.
 5. For a concurrency acceptance test, edit the same record on two devices before syncing. The stale write must be rejected rather than silently winning.
@@ -142,7 +142,7 @@ Data and application releases are intentionally separated. Updating the public U
 
 ## 13. Troubleshooting
 
-- **404 private repository**: token is for the wrong owner/repository or the configured repository name is wrong.
+- **404 private repository**: the GitHub App is not installed on `project-journal-data`, or it was installed on the wrong repository.
 - **401/403**: token expired, was revoked, or lacks Contents read/write.
 - **409 conflict**: another device changed the same record; sync first, review the newer record, then reapply the intended change.
 - **Offline cache**: GitHub is unreachable or the user deliberately opened cached data. It is read-only.

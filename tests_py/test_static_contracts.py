@@ -14,6 +14,7 @@ def test_runtime_has_no_sqlite_or_node_dependency():
 
 def test_csp_restricts_runtime():
     html = (ROOT/'index.html').read_text()
+    config = (ROOT/'src/config.js').read_text()
     assert "connect-src https://api.github.com" in html
     assert "script-src 'self'" in html
     assert "object-src 'none'" in html
@@ -21,6 +22,10 @@ def test_csp_restricts_runtime():
     assert "'unsafe-eval'" not in html
     assert "script-src 'self'" in html
     assert "style-src-attr 'unsafe-inline'" in html
+    broker = re.search(r"authBrokerUrl:\s*'([^']+)'", config)
+    assert broker, 'authBrokerUrl must be configured'
+    host = broker.group(1).split('/')[2]
+    assert host in html, 'CSP connect-src must allow the exact auth broker host'
 
 
 def test_token_is_session_only():

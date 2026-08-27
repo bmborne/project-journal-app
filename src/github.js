@@ -43,6 +43,16 @@ async function api(path, options = {}) {
 export const getCurrentUser = () => api('/user');
 export const getRepo = (owner, repo) => api(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
 
+export async function findInstalledRepo(repoName) {
+  const payload = await api('/user/installations');
+  for (const installation of payload?.installations || []) {
+    const repos = await api(`/user/installations/${installation.id}/repositories?per_page=100`);
+    const match = (repos?.repositories || []).find(row => row.name === repoName);
+    if (match) return match;
+  }
+  return null;
+}
+
 export async function getDataTree(owner, repo, branch) {
   const tree = await api(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
   if (tree.truncated) throw new GitHubError('The data repository is too large to load safely with the current sync method.', 413);
