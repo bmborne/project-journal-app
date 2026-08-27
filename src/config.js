@@ -1,7 +1,7 @@
 export const config = {
   appName: 'Project Journal',
   dataRepoName: 'project-journal-data',
-  authBrokerUrl: '',
+  authBrokerUrl: 'https://project-journal-auth.boniphacemkindi.workers.dev',
   apiVersion: '2026-03-10',
   schemaVersion: 3
 };
