@@ -1,6 +1,6 @@
 import { config, validateConfig } from './config.js';
 import { setAccessToken, hasSavedAuth, signOut } from './auth.js';
-import { isDeviceAuthConfigured, pollForToken, requestDeviceCode } from './device-auth.js';
+import { isDeviceAuthConfigured, pollForToken, requestDeviceCode } from './device-auth.js?v=7';
 import { JournalStore } from './store.js';
 import { ConflictError, GitHubError } from './github.js';
 import { clearCache } from './cache.js';
