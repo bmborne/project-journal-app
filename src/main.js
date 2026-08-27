@@ -55,6 +55,43 @@ function personById(id) { return store.people().find(p => p.id === id) || null; 
 function tagById(id) { return store.tags().find(t => t.id === id) || null; }
 function personName(id) { return personById(id)?.name || ''; }
 function tagName(id) { return tagById(id)?.name || ''; }
+function workingProject() { return state.scopeProjectId === 'all' ? null : projectById(state.scopeProjectId); }
+function isWorkingInProject() { return Boolean(workingProject()); }
+
+function setLockedProjectField(projectId) {
+  const project = projectById(projectId);
+  $('e-project').value = project?.id || '';
+  $('e-project-label').value = project ? (project.code ? `${project.name} (${project.code})` : project.name) : '';
+}
+
+function enterProject(projectId) {
+  const project = projectById(projectId);
+  if (!project) return false;
+  if (state.scopeProjectId !== project.id) {
+    closeEntryEditor();
+    state.scopeProjectId = project.id;
+    renderAll();
+  } else {
+    renderProjectScope();
+  }
+  return true;
+}
+
+function requireWorkingProject() {
+  if (isWorkingInProject()) return true;
+  const projects = store.projects();
+  if (projects.length === 1) return enterProject(projects[0].id);
+  banner(projects.length ? 'Select a project in Working in first. Each entry stays inside one project.' : 'Create a project first, then add entries inside it.', 'error');
+  return false;
+}
+
+function ensureEntryProject(entry) {
+  if (!entry) return false;
+  if (state.scopeProjectId === entry.projectId) return true;
+  if (state.scopeProjectId === 'all') return enterProject(entry.projectId);
+  banner('Switch to that project first. You can only see and edit entries for the project you are working in.', 'error');
+  return false;
+}
 
 function scopeEntries(includeArchived = false) {
   let entries = store.entries({ includeArchived });
@@ -68,11 +105,13 @@ function activeProjectEntries(projectId) {
 
 function renderProjectScope() {
   const projects = store.projects();
-  if (state.scopeProjectId !== 'all' && !projects.some(p => p.id === state.scopeProjectId)) state.scopeProjectId = 'all';
+  if (state.scopeProjectId !== 'all' && !projects.some(p => p.id === state.scopeProjectId)) {
+    state.scopeProjectId = 'all';
+    closeEntryEditor();
+  }
   $('project-scope').innerHTML = `<option value="all">All projects</option>${projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}${p.code ? ` - ${escapeHtml(p.code)}` : ''}</option>`).join('')}`;
   $('project-scope').value = state.scopeProjectId;
-  $('e-project').innerHTML = projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
-  if (!$('e-project').value && projects[0]) $('e-project').value = projects[0].id;
+  setLockedProjectField(isWorkingInProject() ? state.scopeProjectId : '');
 }
 
 function renderPeopleDatalist() {
@@ -84,9 +123,10 @@ function setView(view) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
   $(`${view}-view`).classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+  const scopeProject = workingProject();
   const titles = {
-    dashboard: ['Portfolio overview', 'Dashboard'],
-    journal: ['Searchable work history', 'Journal'],
+    dashboard: [scopeProject ? scopeProject.name : 'Portfolio overview', scopeProject ? 'Project dashboard' : 'Dashboard'],
+    journal: [scopeProject ? scopeProject.name : 'Searchable work history', scopeProject ? 'Project journal' : 'Journal'],
     projects: ['Portfolio catalogue', 'Projects'],
     data: ['GitHub-backed storage', 'Data & Sync']
   };
@@ -164,10 +204,10 @@ function renderDashboard() {
     : scopeEntries();
   const projects = store.projects();
   const m = dashboardMetrics(entries);
-  const scopeProject = state.scopeProjectId === 'all' ? null : projectById(state.scopeProjectId);
+  const scopeProject = workingProject();
   const typeRows = Object.keys(typeMeta).map(key => ({ key, label: typeMeta[key].label, value: entries.filter(e => e.type === key).length }));
-  const openProjectRows = projects.map(p => ({ key: p.id, label: p.name, value: activeProjectEntries(p.id).filter(e => trackedTypes.has(e.type) && e.status !== 'closed').length })).sort((a,b) => b.value - a.value).slice(0,8);
-  const health = projectHealthRows();
+  const openProjectRows = (scopeProject ? [scopeProject] : projects).map(p => ({ key: p.id, label: p.name, value: activeProjectEntries(p.id).filter(e => trackedTypes.has(e.type) && e.status !== 'closed').length })).sort((a,b) => b.value - a.value).slice(0,8);
+  const health = (scopeProject ? projectHealthRows().filter(row => row.p.id === scopeProject.id) : projectHealthRows());
 
   $('dashboard-view').innerHTML = `
     <div class="section-head">
@@ -184,16 +224,16 @@ function renderDashboard() {
       ${renderMetric(m.recent.length, '7-day activity', `${entries.length} total records`)}
     </div>
     <div class="dashboard-grid">
-      <section class="chart-card"><div class="eyebrow">Work mix</div><h3>Records by type</h3><div class="chart-sub">Distribution of captured project knowledge in the current view.</div>${renderBarList(typeRows, Object.fromEntries(Object.entries(typeMeta).map(([k,v]) => [k,v.color])))}</section>
-      <section class="chart-card"><div class="eyebrow">Workload</div><h3>Open work by project</h3><div class="chart-sub">Open actions, issues and risks.</div>${renderBarList(openProjectRows)}</section>
+      <section class="chart-card"><div class="eyebrow">Work mix</div><h3>Records by type</h3><div class="chart-sub">${scopeProject ? 'Records inside this project only.' : 'Distribution of captured project knowledge in the current view.'}</div>${renderBarList(typeRows, Object.fromEntries(Object.entries(typeMeta).map(([k,v]) => [k,v.color])))}</section>
+      <section class="chart-card"><div class="eyebrow">Workload</div><h3>${scopeProject ? 'Open work in this project' : 'Open work by project'}</h3><div class="chart-sub">${scopeProject ? 'Open actions, issues and risks for the selected project.' : 'Open actions, issues and risks.'}</div>${renderBarList(openProjectRows)}</section>
     </div>
     <div class="dashboard-grid equal">
-      <section class="chart-card"><div class="eyebrow">Portfolio health</div><h3>Project control overview</h3><div class="chart-sub">Current open control items per project.</div>
+      <section class="chart-card"><div class="eyebrow">${scopeProject ? 'Project health' : 'Portfolio health'}</div><h3>${scopeProject ? 'Control overview' : 'Project control overview'}</h3><div class="chart-sub">${scopeProject ? 'Open control items in this project.' : 'Current open control items per project.'}</div>
         ${health.length ? `<div style="overflow:auto"><table class="project-health-table"><thead><tr><th>Project</th><th>Status</th><th>Actions</th><th>Overdue</th><th>Issues</th><th>High risks</th></tr></thead><tbody>${health.map(({p,m}) => `<tr><td class="health-project">${escapeHtml(p.name)}</td><td><span class="mini-status ${p.status}">${escapeHtml(p.status)}</span></td><td>${m.openActions.length}</td><td>${m.overdue.length}</td><td>${m.openIssues.length}</td><td>${m.highRisks.length}</td></tr>`).join('')}</tbody></table></div>` : `<div class="empty-state"><strong>No projects</strong>Create a project to start.</div>`}
       </section>
-      <section class="chart-card"><div class="eyebrow">Risk exposure</div><h3>Risk matrix</h3><div class="chart-sub">Open risks by likelihood and impact.</div>${renderRiskMatrix(entries)}</section>
+      <section class="chart-card"><div class="eyebrow">Risk exposure</div><h3>Risk matrix</h3><div class="chart-sub">${scopeProject ? 'Open risks in this project.' : 'Open risks by likelihood and impact.'}</div>${renderRiskMatrix(entries)}</section>
     </div>
-    <section class="chart-card"><div class="eyebrow">Timeline</div><h3>Recent activity</h3><div class="chart-sub">Latest records in the current project scope.</div>${renderRecent(entries)}</section>
+    <section class="chart-card"><div class="eyebrow">Timeline</div><h3>Recent activity</h3><div class="chart-sub">${scopeProject ? 'Latest records in this project.' : 'Latest records in the current project scope.'}</div>${renderRecent(entries)}</section>
   `;
 }
 
@@ -238,7 +278,7 @@ function renderEntryCard(e) {
   const people = (e.peopleIds || []).map(personName).filter(Boolean);
   const tags = (e.tagIds || []).map(tagName).filter(Boolean);
   return `<article class="entry-card" style="--entry-color:${t.color}">
-    <div class="entry-top"><div class="entry-meta"><span class="type-badge" style="--type-bg:${t.bg};--type-fg:${t.fg}">${t.label}</span><span class="entry-project">${escapeHtml(project?.name || 'Unknown project')}</span>${e.status ? `<span class="entry-status ${e.status}">${escapeHtml(e.status)}</span>` : ''}<span class="data-pill">${escapeHtml(formatDate(e.eventDate))}</span></div>
+    <div class="entry-top"><div class="entry-meta"><span class="type-badge" style="--type-bg:${t.bg};--type-fg:${t.fg}">${t.label}</span>${isWorkingInProject() ? '' : `<span class="entry-project">${escapeHtml(project?.name || 'Unknown project')}</span>`}${e.status ? `<span class="entry-status ${e.status}">${escapeHtml(e.status)}</span>` : ''}<span class="data-pill">${escapeHtml(formatDate(e.eventDate))}</span></div>
     <div class="entry-actions"><button class="btn secondary" data-action="edit-entry" data-id="${escapeHtml(e.id)}">Edit</button>${trackedTypes.has(e.type) ? `<button class="btn secondary" data-action="toggle-entry" data-id="${escapeHtml(e.id)}">${e.status === 'closed' ? 'Reopen' : 'Close'}</button>` : ''}<button class="btn danger" data-action="delete-entry" data-id="${escapeHtml(e.id)}">Delete</button></div></div>
     <h3>${escapeHtml(e.title)}</h3>${e.body ? `<p class="entry-body">${escapeHtml(e.body)}</p>` : ''}
     ${entryDetailPills(e) ? `<div class="entry-details">${entryDetailPills(e)}</div>` : ''}
@@ -250,15 +290,24 @@ function renderJournal() {
   renderProjectScope();
   renderPeopleDatalist();
   const entries = filteredJournalEntries();
-  $('journal-results').innerHTML = entries.length ? `<div class="section-head"><div><div class="eyebrow">Results</div><h2>${entries.length} ${entries.length === 1 ? 'record' : 'records'}</h2></div></div><div class="entry-list">${entries.map(renderEntryCard).join('')}</div>` : `<div class="empty-state"><strong>No matching records</strong>Adjust the filters or add a new journal entry.</div>`;
+  const scopeProject = workingProject();
+  const empty = scopeProject
+    ? `<div class="empty-state"><strong>No records in ${escapeHtml(scopeProject.name)}</strong>Add a journal entry to this project, or switch project in Working in.</div>`
+    : `<div class="empty-state"><strong>No matching records</strong>Select a project in Working in to add entries, or adjust the filters.</div>`;
+  $('journal-results').innerHTML = entries.length ? `<div class="section-head"><div><div class="eyebrow">${scopeProject ? 'This project' : 'Results'}</div><h2>${entries.length} ${entries.length === 1 ? 'record' : 'records'}</h2></div></div><div class="entry-list">${entries.map(renderEntryCard).join('')}</div>` : empty;
 }
 
 function openEntryEditor(id = null) {
   if (state.readOnly) { banner('The app is in offline read-only mode. Reconnect to GitHub before editing.', 'error'); return; }
-  state.editingEntryId = id;
   const entry = id ? store.getById('entries', id) : null;
+  if (entry) {
+    if (!ensureEntryProject(entry)) return;
+  } else if (!requireWorkingProject()) {
+    return;
+  }
+  state.editingEntryId = id;
   $('entry-form-title').textContent = entry ? 'Edit entry' : 'New entry';
-  $('e-project').value = entry?.projectId || (state.scopeProjectId !== 'all' ? state.scopeProjectId : store.projects()[0]?.id || '');
+  setLockedProjectField(entry?.projectId || state.scopeProjectId);
   $('e-date').value = entry?.eventDate || todayIso();
   $('e-type').value = entry?.type || 'action';
   $('e-status').value = entry?.status || 'open';
@@ -299,15 +348,20 @@ function updateTypedFields() {
 async function saveEntry() {
   if (state.readOnly) return;
   $('entry-form-error').textContent = '';
-  const projectId = $('e-project').value;
+  if (!requireWorkingProject()) return;
+  const projectId = state.scopeProjectId;
   const eventDate = $('e-date').value;
   const type = $('e-type').value;
   const title = $('e-title').value.trim();
-  if (!projectId || !projectById(projectId)) { $('entry-form-error').textContent = 'Choose a project.'; return; }
+  if (!projectId || !projectById(projectId)) { $('entry-form-error').textContent = 'Select a project in Working in first.'; return; }
   if (!eventDate) { $('entry-form-error').textContent = 'Date is required.'; return; }
   if (!title) { $('entry-form-error').textContent = 'Title is required.'; return; }
 
   const existing = state.editingEntryId ? store.getById('entries', state.editingEntryId) : null;
+  if (existing && existing.projectId !== projectId) {
+    $('entry-form-error').textContent = 'This entry belongs to another project. Switch project first.';
+    return;
+  }
   const ownerName = type === 'action' ? $('e-owner').value.trim() : type === 'issue' ? $('e-issue-owner').value.trim() : type === 'risk' ? $('e-risk-owner').value.trim() : '';
   try {
     setSync('Saving', 'busy');
@@ -555,7 +609,7 @@ async function doSignOut() {
 async function deleteEntry(id) {
   if (state.readOnly) return;
   const e = store.getById('entries', id);
-  if (!e) return;
+  if (!e || !ensureEntryProject(e)) return;
   if (!confirm(`Delete "${e.title}"? Git history may allow recovery, but it will disappear from the active journal.`)) return;
   try {
     setSync('Deleting', 'busy');
@@ -568,7 +622,7 @@ async function deleteEntry(id) {
 async function toggleEntry(id) {
   if (state.readOnly) return;
   const e = store.getById('entries', id);
-  if (!e || !trackedTypes.has(e.type)) return;
+  if (!e || !trackedTypes.has(e.type) || !ensureEntryProject(e)) return;
   try {
     setSync('Saving', 'busy');
     await store.saveEntity('entries', { ...e, status: e.status === 'closed' ? 'open' : 'closed' }, e.status === 'closed' ? 'reopen' : 'close');
@@ -582,7 +636,11 @@ function wireEvents() {
   $('offline-btn').addEventListener('click', openCachedOffline);
   $('sign-out-btn').addEventListener('click', doSignOut);
   $('sync-btn').addEventListener('click', syncNow);
-  $('project-scope').addEventListener('change', e => { state.scopeProjectId = e.target.value; renderAll(); });
+  $('project-scope').addEventListener('change', e => {
+    closeEntryEditor();
+    state.scopeProjectId = e.target.value;
+    renderAll();
+  });
   $('new-entry-btn').addEventListener('click', () => openEntryEditor());
   $('close-entry-editor').addEventListener('click', closeEntryEditor);
   $('cancel-entry-btn').addEventListener('click', closeEntryEditor);
@@ -604,7 +662,7 @@ function wireEvents() {
     if (action === 'edit-entry') { setView('journal'); openEntryEditor(id); }
     if (action === 'toggle-entry') await toggleEntry(id);
     if (action === 'delete-entry') await deleteEntry(id);
-    if (action === 'open-project') { state.scopeProjectId = id; renderProjectScope(); setView('dashboard'); }
+    if (action === 'open-project') { closeEntryEditor(); state.scopeProjectId = id; renderProjectScope(); setView('dashboard'); }
     if (action === 'edit-project') openProjectDialog(id);
     if (action === 'archive-project') await archiveProject(id);
     if (action === 'sync') await syncNow();

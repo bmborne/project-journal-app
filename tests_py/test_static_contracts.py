@@ -66,6 +66,17 @@ def test_data_template_contains_only_metadata():
     assert files == ['meta.json']
 
 
+def test_entry_editor_locks_project_to_current_scope():
+    html = (ROOT/'index.html').read_text()
+    main = (ROOT/'src/main.js').read_text()
+    assert 'id="e-project-label"' in html
+    assert 'id="e-project-label"' in html and 'readonly' in html.split('id="e-project-label"', 1)[1].split('>', 1)[0]
+    assert '<select id="e-project">' not in html
+    assert 'requireWorkingProject' in main
+    assert 'ensureEntryProject' in main
+    assert 'Select a project in Working in first' in main
+
+
 def test_html_ids_are_unique():
     html = (ROOT/'index.html').read_text()
     ids = re.findall(r'\bid="([^"]+)"', html)
