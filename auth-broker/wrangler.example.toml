@@ -1,0 +1,9 @@
+name = "project-journal-auth"
+main = "worker.js"
+compatibility_date = "2026-08-27"
+
+[vars]
+ALLOWED_ORIGIN = "https://bmborne.github.io"
+GITHUB_CLIENT_ID = "replace-with-github-app-client-id"
+# Optional but recommended. Use the numeric repository ID for project-journal-data.
+GITHUB_REPOSITORY_ID = ""

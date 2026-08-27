@@ -7,7 +7,7 @@ Use one personal GitHub account and two repositories:
 - `project-journal-app` — **Public**. Contains only the static application and tests. GitHub Pages serves this repository.
 - `project-journal-data` — **Private**. Contains the user's journal records. Never enable Pages on this repository.
 
-There is no OneDrive, SQLite server, cloud database, npm runtime dependency, or paid service.
+There is no OneDrive, SQLite server, cloud database, or npm runtime dependency. The app can still use a session-only fine-grained token directly. For GitHub sign-in without pasting a token, deploy the optional `auth-broker/` Worker and connect it to a GitHub App installed only on the private data repository.
 
 ## 2. Create the repositories
 
@@ -83,11 +83,29 @@ In GitHub account settings create a **fine-grained personal access token**:
 
 Never store this token in either Git repository or in GitHub Actions variables/secrets. It belongs only in the user's browser session.
 
+## 7a. Optional GitHub sign-in without token pasting
+
+GitHub Pages cannot call GitHub's device-flow OAuth endpoints directly from browser JavaScript because those endpoints are not CORS-enabled for this use. To use the **Sign in with GitHub** button, deploy the `auth-broker/` Worker:
+
+1. Create a GitHub App owned by the same account that owns `project-journal-data`.
+2. Enable **Device flow** in the GitHub App settings.
+3. Grant repository permission **Contents → Read and write**.
+4. Install the GitHub App on **Only select repositories** → `project-journal-data`.
+5. Deploy `auth-broker/worker.js` to Cloudflare Workers.
+6. Set Worker variables:
+   - `GITHUB_CLIENT_ID`: the GitHub App client ID.
+   - `ALLOWED_ORIGIN`: `https://YOUR-USERNAME.github.io`.
+   - `GITHUB_REPOSITORY_ID`: optional numeric ID for `project-journal-data`.
+7. Set `authBrokerUrl` in `src/config.js` to the Worker URL.
+8. Commit and push the app repo again so GitHub Pages redeploys.
+
+The Worker does not store tokens. The browser stores the returned access token only in `sessionStorage`, matching the original session-only security model.
+
 ## 8. First run
 
 1. Open the Pages URL.
-2. Paste the fine-grained token.
-3. Select **Connect private repository**.
+2. Select **Sign in with GitHub**, or paste the fine-grained token fallback.
+3. Complete GitHub verification or select **Connect with token**.
 4. Rename the generated first project or create the first real project.
 5. Add an Action, Issue and Risk and confirm the Dashboard updates.
 6. Open the private data repo and verify that GitHub created JSON records beneath `data/`.

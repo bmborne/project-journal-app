@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
   <meta name="referrer" content="no-referrer" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com https://*.workers.dev; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'" />
   <title>Project Journal</title>
   <link rel="stylesheet" href="./src/styles.css" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -25,11 +25,23 @@
       <div class="privacy-callout">
         <strong>Before using this for work:</strong> only store information your employer or client permits you to keep in a personal GitHub account. Do not store credentials, regulated personal data, client secrets or material you are not entitled to retain after an engagement.
       </div>
-      <div class="field token-field"><label for="github-token">Fine-grained GitHub token</label><input id="github-token" type="password" autocomplete="off" placeholder="github_pat_..." /></div>
-      <p class="fine-print">For safety, the token is stored only for this browser session and is removed when you sign out or close the session.</p>
-      <button id="sign-in-btn" class="btn primary large">Connect private repository</button>
+      <button id="github-device-btn" class="btn primary large">Sign in with GitHub</button>
+      <div id="device-auth-panel" class="device-auth-panel hidden">
+        <div class="eyebrow">GitHub device code</div>
+        <div id="device-code" class="device-code"></div>
+        <a id="device-link" class="btn secondary large" href="https://github.com/login/device" target="_blank" rel="noopener">Open GitHub verification</a>
+        <p id="device-status" class="fine-print">Enter this code on GitHub, then return here while the app connects.</p>
+      </div>
+      <div id="device-auth-unavailable" class="oauth-unavailable hidden">
+        GitHub sign-in needs the auth broker URL in <code>src/config.js</code>. The token fallback still works.
+      </div>
+      <details class="token-fallback">
+        <summary>Use fine-grained token instead</summary>
+        <div class="field token-field"><label for="github-token">Fine-grained GitHub token</label><input id="github-token" type="password" autocomplete="off" placeholder="github_pat_..." /></div>
+        <button id="sign-in-btn" class="btn secondary large">Connect with token</button>
+      </details>
       <button id="offline-btn" class="btn secondary large">Open cached data read-only</button>
-      <p class="fine-print">Create a fine-grained GitHub personal access token restricted to the private data repository with repository Contents read/write permission. The token is never committed to GitHub and is kept only for the current browser session.</p>
+      <p class="fine-print">GitHub sign-in and token fallback both keep the resulting access token only for this browser session. The recommended GitHub App is installed only on the private data repository with Contents read/write permission.</p>
       <div id="login-error" class="error-text"></div>
     </div>
   </section>

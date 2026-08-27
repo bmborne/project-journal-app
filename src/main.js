@@ -1,5 +1,6 @@
 import { config, validateConfig } from './config.js';
 import { setAccessToken, hasSavedAuth, signOut } from './auth.js';
+import { isDeviceAuthConfigured, pollForToken, requestDeviceCode } from './device-auth.js';
 import { JournalStore } from './store.js';
 import { ConflictError, GitHubError } from './github.js';
 import { clearCache } from './cache.js';
@@ -524,6 +525,37 @@ async function signInFlow() {
   }
 }
 
+async function deviceSignInFlow() {
+  $('login-error').textContent = '';
+  if (!isDeviceAuthConfigured()) {
+    $('login-error').textContent = 'GitHub sign-in is not configured yet. Deploy the auth broker and set authBrokerUrl in src/config.js, or use the token fallback.';
+    return;
+  }
+  try {
+    $('github-device-btn').disabled = true;
+    $('device-auth-panel').classList.remove('hidden');
+    $('device-status').textContent = 'Requesting GitHub device code...';
+    const device = await requestDeviceCode();
+    $('device-code').textContent = device.user_code;
+    $('device-link').href = device.verification_uri || 'https://github.com/login/device';
+    $('device-status').textContent = 'Enter this code on GitHub, then return here while the app connects.';
+    window.open($('device-link').href, '_blank', 'noopener');
+    const token = await pollForToken(device.device_code, {
+      interval: device.interval,
+      expiresIn: device.expires_in,
+      onStatus: text => { $('device-status').textContent = text; }
+    });
+    setAccessToken(token.access_token);
+    await connectUsingSavedAuth();
+  } catch (err) {
+    signOut();
+    showLogin();
+    $('login-error').textContent = err.message || 'GitHub sign-in failed.';
+  } finally {
+    $('github-device-btn').disabled = false;
+  }
+}
+
 async function doSignOut() {
   signOut();
   state.connected = false;
@@ -558,6 +590,7 @@ async function toggleEntry(id) {
 }
 
 function wireEvents() {
+  $('github-device-btn').addEventListener('click', deviceSignInFlow);
   $('sign-in-btn').addEventListener('click', signInFlow);
   $('offline-btn').addEventListener('click', openCachedOffline);
   $('sign-out-btn').addEventListener('click', doSignOut);
@@ -603,6 +636,8 @@ function wireEvents() {
 
 async function bootstrap() {
   wireEvents();
+  $('device-auth-unavailable').classList.toggle('hidden', isDeviceAuthConfigured());
+  $('github-device-btn').disabled = !isDeviceAuthConfigured();
   const configErrors = validateConfig();
   if (configErrors.length) {
     $('fatal').textContent = `Configuration required: ${configErrors.join(' ')}`;

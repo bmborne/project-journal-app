@@ -3,10 +3,10 @@ let current = null;
 
 export function setAccessToken(token) {
   const clean = String(token || '').trim();
-  if (!clean.startsWith('github_pat_')) {
-    throw new Error('Use a fine-grained GitHub personal access token (it should start with github_pat_).');
+  if (!/^(github_pat_|ghu_|gho_)/.test(clean)) {
+    throw new Error('Use a GitHub token from device sign-in or a fine-grained token that starts with github_pat_.');
   }
-  const payload = JSON.stringify({ token: clean });
+  const payload = JSON.stringify({ token: clean, createdAt: new Date().toISOString() });
   sessionStorage.setItem(SESSION_KEY, payload);
   current = { token: clean };
 }
